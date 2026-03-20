@@ -14,8 +14,6 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:#e8e5de; font-family:'Noto Sans SC',system-ui,sans-serif; color:var(--ink); line-height:1.85; -webkit-font-smoothing:antialiased; }
   .wrap { max-width:760px; margin:0 auto; background:var(--paper); box-shadow:0 0 50px rgba(0,0,0,.06); min-height:100vh; }
-
-  /* Header */
   .hdr { background:var(--ink); color:var(--paper); padding:36px 40px 30px; position:relative; }
   .hdr::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--c-talent),var(--c-org),var(--c-industry)); }
   .hdr-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
@@ -24,14 +22,10 @@
   .hdr-meta { font-size:12px; opacity:.4; margin-top:8px; }
   select.issue-sel { background:rgba(255,255,255,.1); color:var(--paper); border:1px solid rgba(255,255,255,.2); border-radius:3px; padding:4px 10px; font-size:12px; cursor:pointer; outline:none; }
   select.issue-sel option { color:var(--ink); }
-
-  /* Section */
   .sec { padding:32px 40px; border-bottom:1px solid var(--border); }
   .sec-head { display:flex; align-items:center; gap:8px; margin-bottom:20px; }
   .sec-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .sec-label { font-size:11px; font-weight:700; letter-spacing:4px; }
-
-  /* Item */
   .item { margin-bottom:24px; padding-bottom:24px; border-bottom:1px dashed var(--border); }
   .item:last-child { margin-bottom:0; padding-bottom:0; border-bottom:none; }
   .item h3 { font-family:'Noto Serif SC',Georgia,serif; font-size:15.5px; font-weight:700; line-height:1.55; margin-bottom:8px; }
@@ -40,8 +34,6 @@
   .src b { color:#888; font-weight:500; }
   .src .date { margin-left:8px; color:#bbb; }
   .hr-take { margin-top:10px; font-size:13px; color:var(--accent); padding-left:14px; border-left:2px solid var(--accent); line-height:1.7; }
-
-  /* Deep dive */
   .deep { background:#fdfcf9; padding:36px 40px; border-bottom:1px solid var(--border); }
   .deep h2 { font-family:'Noto Serif SC',Georgia,serif; font-size:19px; font-weight:700; line-height:1.45; margin-bottom:6px; cursor:pointer; }
   .deep h2 .arrow { font-size:13px; color:#aaa; font-weight:400; margin-left:8px; }
@@ -50,20 +42,13 @@
   .insight-box { background:#fff; border:1px solid var(--border); border-radius:4px; padding:18px 22px; margin-top:20px; }
   .insight-box .label { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--accent); margin-bottom:10px; }
   .insight-box p { font-size:13.5px; color:var(--steel); line-height:1.85; margin-bottom:10px; }
-
-  /* Reads */
   .reads-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .read-card { background:#f5f2ec; border-radius:4px; padding:14px 16px; }
   .read-cat { display:inline-block; font-size:10px; font-weight:700; letter-spacing:1px; color:#fff; padding:1px 7px; border-radius:2px; margin-bottom:5px; }
   .read-title { font-size:13px; font-weight:500; line-height:1.5; margin-bottom:4px; }
   .read-src { font-size:11px; color:#aaa; }
-
-  /* Footer */
   .ftr { background:var(--ink); color:rgba(255,255,255,.35); padding:28px 40px; font-size:12px; text-align:center; line-height:1.8; }
-
-  /* Loading / Error */
   .status { display:flex; justify-content:center; align-items:center; height:100vh; font-size:14px; color:#888; }
-
   @media(max-width:640px) {
     .hdr,.sec,.deep,.ftr { padding-left:20px; padding-right:20px; }
     .hdr h1 { font-size:22px; }
@@ -72,127 +57,108 @@
 </style>
 </head>
 <body>
-
 <div class="wrap" id="app">
   <div class="status">加载中...</div>
 </div>
-
 <script>
 const SECTIONS = {
   talent:   { emoji:'🟢', name:'人才市场',     color:'#16a085' },
   org:      { emoji:'🟣', name:'组织与管理',   color:'#7d3c98' },
   industry: { emoji:'🟠', name:'行业洞察',     color:'#d4880f' },
 };
-
 let allIssues = [];
 let currentIdx = 0;
 let deepExpanded = true;
-
-// ─── Load index ───
 async function init() {
   try {
-    const res = await fetch('issues/index.json?' + Date.now());
-    const index = await res.json();  // e.g. ["2026-W12", "2026-W13"]
-    // Load all issues
+    const base = document.location.pathname.replace(/\/[^/]*$/, '/');
+    const res = await fetch(base + 'issues/index.json?' + Date.now());
+    if (!res.ok) throw new Error('index.json not found: ' + res.status);
+    const index = await res.json();
     const loaded = [];
     for (const id of index) {
       try {
-        const r = await fetch(`issues/${id}.json?` + Date.now());
-        loaded.push(await r.json());
-      } catch(e) { console.warn(`Failed to load ${id}`, e); }
+        const r = await fetch(base + 'issues/' + id + '.json?' + Date.now());
+        if (r.ok) loaded.push(await r.json());
+      } catch(e) { console.warn('Failed to load ' + id, e); }
     }
     if (loaded.length === 0) throw new Error('No issues');
     allIssues = loaded;
     currentIdx = 0;
     render();
   } catch(e) {
-    document.getElementById('app').innerHTML = `<div class="status">暂无周报数据。请将第一期 JSON 文件放入 issues/ 目录。</div>`;
+    document.getElementById('app').innerHTML = '<div class="status">暂无周报数据。请将第一期 JSON 文件放入 issues/ 目录。(' + e.message + ')</div>';
   }
 }
-
 function render() {
   const issue = allIssues[currentIdx];
   if (!issue) return;
-
   let html = '';
-
-  // Header
-  html += `<div class="hdr">
-    <div class="hdr-top">
-      <div class="brand">曦望半导体 · HR情报站</div>
-      ${allIssues.length > 1 ? `<select class="issue-sel" onchange="switchIssue(this.value)">
-        ${allIssues.map((iss,i) => `<option value="${i}" ${i===currentIdx?'selected':''}>${iss.weekRange}</option>`).join('')}
-      </select>` : ''}
-    </div>
-    <h1>HR周报 ｜ ${issue.weekRange}</h1>
-    <div class="hdr-meta">编辑：Mindy / COO Office · 内部资料，请勿外传</div>
-  </div>`;
-
-  // 3 Sections
-  for (const [key, sec] of Object.entries(SECTIONS)) {
-    const items = issue.sections[key] || [];
-    if (items.length === 0) continue;
-    html += `<div class="sec">
-      <div class="sec-head"><div class="sec-dot" style="background:${sec.color}"></div><span class="sec-label" style="color:${sec.color}">${sec.name.toUpperCase()}</span></div>`;
-    items.forEach((item, i) => {
-      html += `<div class="item">
-        <h3>${esc(item.title)}</h3>
-        <p>${esc(item.body)}</p>
-        <div class="src"><b>信息源：</b>${esc(item.source)}<span class="date">(${esc(item.date)})</span></div>
-        ${item.hrTake ? `<div class="hr-take">→ ${esc(item.hrTake)}</div>` : ''}
-      </div>`;
+  html += '<div class="hdr"><div class="hdr-top"><div class="brand">曦望半导体 · HR情报站</div>';
+  if (allIssues.length > 1) {
+    html += '<select class="issue-sel" onchange="switchIssue(this.value)">';
+    allIssues.forEach(function(iss, i) {
+      html += '<option value="' + i + '"' + (i===currentIdx?' selected':'') + '>' + iss.weekRange + '</option>';
     });
-    html += `</div>`;
+    html += '</select>';
   }
-
-  // Deep Dive
+  html += '</div><h1>HR周报 ｜ ' + issue.weekRange + '</h1>';
+  html += '<div class="hdr-meta">编辑：Mindy / COO Office · 内部资料，请勿外传</div></div>';
+  var skeys = ['talent','org','industry'];
+  for (var si = 0; si < skeys.length; si++) {
+    var key = skeys[si];
+    var sec = SECTIONS[key];
+    var items = issue.sections[key] || [];
+    if (items.length === 0) continue;
+    html += '<div class="sec"><div class="sec-head"><div class="sec-dot" style="background:' + sec.color + '"></div><span class="sec-label" style="color:' + sec.color + '">' + sec.name.toUpperCase() + '</span></div>';
+    for (var ii = 0; ii < items.length; ii++) {
+      var item = items[ii];
+      html += '<div class="item"><h3>' + esc(item.title) + '</h3><p>' + esc(item.body) + '</p>';
+      html += '<div class="src"><b>信息源：</b>' + esc(item.source) + '<span class="date">(' + esc(item.date) + ')</span></div>';
+      if (item.hrTake) html += '<div class="hr-take">→ ' + esc(item.hrTake) + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
   if (issue.deepDive) {
-    const d = issue.deepDive;
-    html += `<div class="deep">
-      <div class="sec-head"><div class="sec-dot" style="background:var(--accent)"></div><span class="sec-label" style="color:var(--accent)">本周深度</span></div>
-      <h2 onclick="toggleDeep()">${esc(d.title)}<span class="arrow">${deepExpanded?'▼':'▶'}</span></h2>`;
+    var d = issue.deepDive;
+    html += '<div class="deep"><div class="sec-head"><div class="sec-dot" style="background:var(--accent)"></div><span class="sec-label" style="color:var(--accent)">本周深度</span></div>';
+    html += '<h2 onclick="toggleDeep()">' + esc(d.title) + '<span class="arrow">' + (deepExpanded ? '▼' : '▶') + '</span></h2>';
     if (deepExpanded) {
-      html += `<div class="deep-body">`;
-      d.content.split('\n\n').forEach(p => {
-        html += `<p>${p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
-      });
-      html += `</div>`;
+      html += '<div class="deep-body">';
+      var paras = d.content.split('\n\n');
+      for (var pi = 0; pi < paras.length; pi++) {
+        html += '<p>' + paras[pi].replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') + '</p>';
+      }
+      html += '</div>';
       if (d.insights && d.insights.length > 0) {
-        const nums = '①②③④⑤⑥⑦⑧⑨⑩';
-        html += `<div class="insight-box"><div class="label">💡 对我们的启发</div>`;
-        d.insights.forEach((ins, i) => { html += `<p><strong>${nums[i]} </strong>${esc(ins)}</p>`; });
-        html += `</div>`;
+        var nums = '①②③④⑤⑥⑦⑧⑨⑩';
+        html += '<div class="insight-box"><div class="label">💡 对我们的启发</div>';
+        for (var ni = 0; ni < d.insights.length; ni++) {
+          html += '<p><strong>' + nums[ni] + ' </strong>' + esc(d.insights[ni]) + '</p>';
+        }
+        html += '</div>';
       }
     }
-    html += `</div>`;
+    html += '</div>';
   }
-
-  // Reads
   if (issue.reads && issue.reads.length > 0) {
-    const catLabel = { talent:'人才', org:'组织', industry:'行业' };
-    html += `<div class="sec">
-      <div class="sec-head"><div class="sec-dot" style="background:var(--steel)"></div><span class="sec-label" style="color:var(--steel)">本周推荐关注</span></div>
-      <div class="reads-grid">`;
-    issue.reads.forEach(r => {
-      html += `<div class="read-card">
-        <div class="read-cat" style="background:${r.catColor}">${catLabel[r.cat]||r.cat}</div>
-        <div class="read-title">${esc(r.title)}</div>
-        <div class="read-src">${esc(r.source)} · ${esc(r.date)}</div>
-      </div>`;
-    });
-    html += `</div></div>`;
+    var catLabel = { talent:'人才', org:'组织', industry:'行业' };
+    html += '<div class="sec"><div class="sec-head"><div class="sec-dot" style="background:var(--steel)"></div><span class="sec-label" style="color:var(--steel)">本周推荐关注</span></div><div class="reads-grid">';
+    for (var ri = 0; ri < issue.reads.length; ri++) {
+      var r = issue.reads[ri];
+      html += '<div class="read-card"><div class="read-cat" style="background:' + r.catColor + '">' + (catLabel[r.cat]||r.cat) + '</div>';
+      html += '<div class="read-title">' + esc(r.title) + '</div>';
+      html += '<div class="read-src">' + esc(r.source) + ' · ' + esc(r.date) + '</div></div>';
+    }
+    html += '</div></div>';
   }
-
-  // Footer
-  html += `<div class="ftr">曦望半导体 · COO Office · HR周报 · 仅供内部参考<br>本刊基于公开信息整理，不构成投资建议</div>`;
-
+  html += '<div class="ftr">曦望半导体 · COO Office · HR周报 · 仅供内部参考<br>本刊基于公开信息整理，不构成投资建议</div>';
   document.getElementById('app').innerHTML = html;
 }
-
 function switchIssue(idx) { currentIdx = parseInt(idx); render(); }
 function toggleDeep() { deepExpanded = !deepExpanded; render(); }
-function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 init();
 </script>
 </body>
