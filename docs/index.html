@@ -94,7 +94,7 @@ function render() {
   const issue = allIssues[currentIdx];
   if (!issue) return;
   let html = '';
-  html += '<div class="hdr"><div class="hdr-top"><div class="brand">曦望半导体 · HR情报站</div>';
+  html += '<div class="hdr"><div class="hdr-top"><div class="brand">曦望 Sunrise · HR情报站</div>';
   if (allIssues.length > 1) {
     html += '<select class="issue-sel" onchange="switchIssue(this.value)">';
     allIssues.forEach(function(iss, i) {
@@ -103,7 +103,7 @@ function render() {
     html += '</select>';
   }
   html += '</div><h1>HR周报 ｜ ' + issue.weekRange + '</h1>';
-  html += '<div class="hdr-meta">编辑：Mindy / COO Office · 内部资料，请勿外传</div></div>';
+  html += '<div class="hdr-meta">内部资料，请勿外传</div></div>';
   var skeys = ['talent','org','industry'];
   for (var si = 0; si < skeys.length; si++) {
     var key = skeys[si];
@@ -153,7 +153,7 @@ function render() {
     }
     html += '</div></div>';
   }
-  html += '<div class="ftr">曦望半导体 · COO Office · HR周报 · 仅供内部参考<br>本刊基于公开信息整理，不构成投资建议</div>';
+  html += '<div class="ftr">曦望 Sunrise · HR情报站 · 仅供内部参考<br>本刊基于公开信息整理</div>';
   document.getElementById('app').innerHTML = html;
 }
 function switchIssue(idx) { currentIdx = parseInt(idx); render(); }
